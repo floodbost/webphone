@@ -35,6 +35,7 @@ const RegisterWebphone: React.FC = () => {
           instance({
             type: values.type,
             token: values.token,
+
             account: {
               user: values.user,
               uri: values.uri,
@@ -57,6 +58,7 @@ const RegisterWebphone: React.FC = () => {
                 muted: false,
               },
             },
+            logBuiltinEnabled: true,
           }).then((result) => {
             if (result) {
               result
