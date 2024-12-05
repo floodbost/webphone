@@ -7,7 +7,7 @@ const router = createBrowserRouter([
     element: <HomePage />,
   },
   {
-    path: '/webphone-sdk-demo',
+    path: '/webphone',
     element: <HomePage />,
   },
 ]);
