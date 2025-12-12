@@ -16,13 +16,13 @@ const RegisterWebphone: React.FC = () => {
     ws: string;
   }>({
     initialValues: {
-      type: 'token',
+      type: 'credential',
       token: '',
-      user: '',
-      name: '',
+      user: 'ridwan',
+      name: 'ridwan',
       password: '',
-      uri: '',
-      ws: '',
+      uri: 'sip:ridwan@sipjs.onsip.com',
+      ws: 'wss://edge.sip.onsip.com',
     },
   });
   const { instance, client } = useClient();
@@ -58,7 +58,7 @@ const RegisterWebphone: React.FC = () => {
                 muted: false,
               },
             },
-            logBuiltinEnabled: false,
+            logBuiltinEnabled: true,
           }).then((result) => {
             if (result) {
               result

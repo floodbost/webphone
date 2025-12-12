@@ -157,16 +157,26 @@ const Video: React.FC<{ localStream?: MediaStream; remoteStream?: MediaStream }>
   const [_remoteStream] = useState<MediaStream>(new MediaStream());
 
   //const stream = session.media.localStream;
-  const isActive = localStream?.active;
-  const track = isActive
+  //const isActive = localStream?.active;
+  const localTrack = localStream?.active
     ? localStream?.getVideoTracks().find((item) => item.kind === 'video')
     : null;
 
+  const remoteTrack = remoteStream?.active
+    ? remoteStream?.getVideoTracks().find((item) => item.kind === 'video')
+    : null;
+
   useEffect(() => {
-    if (track) {
-      _localStream.addTrack(track);
+    if (localTrack) {
+      _localStream.addTrack(localTrack);
     }
-  }, [track]);
+  }, [localTrack]);
+
+  useEffect(() => {
+    if (remoteTrack) {
+      _remoteStream.addTrack(remoteTrack);
+    }
+  }, [remoteTrack]);
 
   console.log('stream', localStream);
 

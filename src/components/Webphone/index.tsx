@@ -36,7 +36,7 @@ const WebphoneProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             sessionDescriptionHandlerOptions: { constraints: { audio: true, video: true } },
           })
           .then(() => {
-            session.hold();
+            //session.hold();
           });
       },
     });
