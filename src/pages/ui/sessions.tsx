@@ -11,7 +11,7 @@ import {
   TextInput,
   Button,
 } from '@mantine/core';
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ISession, SessionStatus } from '@atlasat/webphone-sdk';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
@@ -32,6 +32,7 @@ import useSessionDuration from '@/components/Webphone/hooks/use-session-duration
 import useSessionMedia from '@/components/Webphone/hooks/use-session-media';
 import useDevices from '@/components/Webphone/hooks/use-devices';
 import Visual from '@/components/Visual';
+//import Visual from '@/components/Visual';
 
 dayjs.extend(duration);
 
@@ -143,8 +144,53 @@ const MediaDevice: React.FC<{ session: ISession }> = ({ session }) => {
   );
 };
 
+const Video: React.FC<{ session: ISession }> = ({ session }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [localStream] = useState<MediaStream>(new MediaStream());
+
+  const stream = session.media.localStream;
+  const isActive = stream.active;
+
+  useEffect(() => {
+    session?.remoteStream?.addEventListener('addtrack', (ev) => {
+      if (ev.track && ev.track.kind === 'video') {
+        console.log('ev', ev);
+        localStream.addTrack(ev.track);
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    const pc = session.descriptionHandler()?.peerConnection;
+    if (pc) {
+      pc?.getReceivers().forEach((item) => {
+        if (item.track && item.track?.kind === 'video') {
+          localStream.addTrack(item.track);
+        }
+      });
+    }
+  }, [isActive]);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.srcObject = localStream;
+
+      console.log('localStream', localStream);
+    }
+  }, [videoRef, localStream]);
+
+  return (
+    <div style={{ background: '#111' }}>
+      <video ref={videoRef} autoPlay playsInline muted>
+        <track kind="captions" />
+      </video>
+    </div>
+  );
+};
+
 const Sessions: React.FC = () => {
   const sessions = useSessions();
+
   return (
     <Table.ScrollContainer minWidth={500}>
       <Table verticalSpacing="sm">
@@ -154,6 +200,7 @@ const Sessions: React.FC = () => {
             <Table.Th>Source</Table.Th>
             <Table.Th>Status</Table.Th>
             <Table.Th>Visual</Table.Th>
+            <Table.Th>Video</Table.Th>
             <Table.Th>Duration</Table.Th>
             <Table.Th>Action</Table.Th>
           </Table.Tr>
@@ -174,6 +221,9 @@ const Sessions: React.FC = () => {
                   <Visual mediaStream={session.media.localStream} type="local" />
                   <Visual mediaStream={session.media.remoteStream} type="remote" />
                 </Group>
+              </Table.Td>
+              <Table.Td>
+                <Video session={session} />
               </Table.Td>
               <Table.Td>
                 <Duration session={session} />

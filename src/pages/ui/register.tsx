@@ -58,7 +58,7 @@ const RegisterWebphone: React.FC = () => {
                 muted: false,
               },
             },
-            logBuiltinEnabled: true,
+            logBuiltinEnabled: false,
           }).then((result) => {
             if (result) {
               result
@@ -117,7 +117,9 @@ const RegisterWebphone: React.FC = () => {
             disabled={!isConnected}
             variant="default"
             mt="md"
-            onClick={() => client?.disconnect()}
+            onClick={() => {
+              client?.disconnect();
+            }}
           >
             Disconnect
           </Button>

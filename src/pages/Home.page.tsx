@@ -13,7 +13,7 @@ export function HomePage() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   return (
-    <Container mt="lg" size="lg">
+    <Container mt="lg" size={1366}>
       <Title order={4}>Example demo sdk</Title>
       <Grid mt="md">
         <Grid.Col span={3}>
@@ -31,7 +31,14 @@ export function HomePage() {
             <Button
               onClick={() => {
                 if (inputRef.current) {
-                  client?.invite(inputRef.current.value, { earlyMedia: true }).then(() => {});
+                  client
+                    ?.invite(inputRef.current.value, {
+                      earlyMedia: true,
+                      sessionDescriptionHandlerOptions: {
+                        constraints: { audio: true, video: true },
+                      },
+                    })
+                    .then(() => {});
                 }
               }}
             >

@@ -15,6 +15,9 @@ const useSessions = () => {
           session.localStream?.addEventListener('addtrack', () =>
             setSessions(client.getSessions())
           );
+          session.on('trackAdd', () => {
+            setSessions(client.getSessions());
+          });
         });
         setSessions(allSession);
       }

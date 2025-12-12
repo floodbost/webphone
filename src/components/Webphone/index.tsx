@@ -30,7 +30,15 @@ const WebphoneProvider: React.FC<{ children: React.ReactNode }> = ({ children })
       children: <>New Incoming call from {session.remoteIdentity.phoneNumber}</>,
       labels: { confirm: 'Accept', cancel: 'Reject' },
       onCancel: () => session.reject(),
-      onConfirm: () => session.accept(),
+      onConfirm: () => {
+        session
+          .accept({
+            sessionDescriptionHandlerOptions: { constraints: { audio: true, video: true } },
+          })
+          .then(() => {
+            session.hold();
+          });
+      },
     });
 
   useEffect(() => {
