@@ -25,8 +25,10 @@ import {
   IconVolumeOff,
   IconSettings,
   IconDialpad,
+  IconVideo,
 } from '@tabler/icons-react';
 import { useForm } from '@mantine/form';
+import { modals } from '@mantine/modals';
 import useSessions from '@/components/Webphone/hooks/use-sessions';
 import useSessionDuration from '@/components/Webphone/hooks/use-session-duration';
 import useSessionMedia from '@/components/Webphone/hooks/use-session-media';
@@ -144,47 +146,98 @@ const MediaDevice: React.FC<{ session: ISession }> = ({ session }) => {
   );
 };
 
-const Video: React.FC<{ session: ISession }> = ({ session }) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [localStream] = useState<MediaStream>(new MediaStream());
+const Video: React.FC<{ localStream?: MediaStream; remoteStream?: MediaStream }> = ({
+  localStream,
+  remoteStream,
+}) => {
+  const localVideoRef = useRef<HTMLVideoElement>(null);
+  const remoteVideoRef = useRef<HTMLVideoElement>(null);
 
-  const stream = session.media.localStream;
-  const isActive = stream.active;
+  const [_localStream] = useState<MediaStream>(new MediaStream());
+  const [_remoteStream] = useState<MediaStream>(new MediaStream());
+
+  //const stream = session.media.localStream;
+  const isActive = localStream?.active;
+  const track = isActive
+    ? localStream?.getVideoTracks().find((item) => item.kind === 'video')
+    : null;
 
   useEffect(() => {
-    session?.remoteStream?.addEventListener('addtrack', (ev) => {
+    if (track) {
+      _localStream.addTrack(track);
+    }
+  }, [track]);
+
+  console.log('stream', localStream);
+
+  useEffect(() => {
+    localStream?.addEventListener('addtrack', (ev) => {
       if (ev.track && ev.track.kind === 'video') {
-        console.log('ev', ev);
-        localStream.addTrack(ev.track);
+        _localStream.addTrack(ev.track);
       }
     });
-  }, []);
+    remoteStream?.addEventListener('addtrack', (ev) => {
+      if (ev.track && ev.track.kind === 'video') {
+        _remoteStream.addTrack(ev.track);
+      }
+    });
+  }, [localStream, remoteStream]);
 
   useEffect(() => {
-    const pc = session.descriptionHandler()?.peerConnection;
-    if (pc) {
-      pc?.getReceivers().forEach((item) => {
-        if (item.track && item.track?.kind === 'video') {
-          localStream.addTrack(item.track);
-        }
-      });
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = _localStream;
     }
-  }, [isActive]);
+  }, [localVideoRef, _localStream]);
 
   useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.srcObject = localStream;
-
-      console.log('localStream', localStream);
+    if (remoteVideoRef.current) {
+      remoteVideoRef.current.srcObject = _remoteStream;
     }
-  }, [videoRef, localStream]);
+  }, [remoteVideoRef, _remoteStream]);
 
   return (
-    <div style={{ background: '#111' }}>
-      <video ref={videoRef} autoPlay playsInline muted>
+    <Box style={{ display: 'flex', width: '100%', height: 250, gap: 50, justifyContent: 'center' }}>
+      <video
+        ref={remoteVideoRef}
+        autoPlay
+        playsInline
+        muted
+        style={{ objectFit: 'cover', width: 350, border: '1px solid #d1d1d1' }}
+      >
         <track kind="captions" />
       </video>
-    </div>
+      <video
+        ref={localVideoRef}
+        autoPlay
+        playsInline
+        muted
+        style={{ objectFit: 'cover', width: 350, border: '1px solid #d1d1d1' }}
+      >
+        <track kind="captions" />
+      </video>
+      {/* <AspectRatio ratio={16 / 9} maw={300} mx="auto">
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          //style={{ objectFit: 'cover', border: '1px solid #d1d1d1' }}
+        >
+          <track kind="captions" />
+        </video>
+      </AspectRatio>
+      <AspectRatio ratio={16 / 9} maw={300} mx="auto">
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          //style={{ objectFit: 'cover', border: '1px solid #d1d1d1' }}
+        >
+          <track kind="captions" />
+        </video>
+      </AspectRatio> */}
+    </Box>
   );
 };
 
@@ -200,7 +253,6 @@ const Sessions: React.FC = () => {
             <Table.Th>Source</Table.Th>
             <Table.Th>Status</Table.Th>
             <Table.Th>Visual</Table.Th>
-            <Table.Th>Video</Table.Th>
             <Table.Th>Duration</Table.Th>
             <Table.Th>Action</Table.Th>
           </Table.Tr>
@@ -221,9 +273,6 @@ const Sessions: React.FC = () => {
                   <Visual mediaStream={session.media.localStream} type="local" />
                   <Visual mediaStream={session.media.remoteStream} type="remote" />
                 </Group>
-              </Table.Td>
-              <Table.Td>
-                <Video session={session} />
               </Table.Td>
               <Table.Td>
                 <Duration session={session} />
@@ -282,6 +331,26 @@ const Sessions: React.FC = () => {
                     <Volume session={session} media="input" />
                   </Popover.Dropdown>
                 </Popover>{' '}
+                <ActionIcon
+                  variant="outline"
+                  radius="lg"
+                  onClick={() => {
+                    modals.open({
+                      title: 'Video',
+                      centered: true,
+                      size: '900px',
+                      closeOnClickOutside: false,
+                      children: (
+                        <Video
+                          remoteStream={session.remoteStream}
+                          localStream={session.localStream}
+                        />
+                      ),
+                    });
+                  }}
+                >
+                  <IconVideo size={15} stroke={1.5} />
+                </ActionIcon>{' '}
                 <ActionIcon
                   color="blue"
                   radius="lg"
